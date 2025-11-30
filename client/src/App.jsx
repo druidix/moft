@@ -9,6 +9,7 @@ function App() {
     lomin: -119.0,
     lamax: 34.5,
     lomax: -117.5,
+    extended: 1,
   });
 
   const fetchFlights = async () => {
@@ -35,6 +36,8 @@ function App() {
           latitude: s[6],
           altitude: s[13] ?? s[7], // prefer geo_altitude, fall back to baro
           velocity: s[9],
+          verticalRate: s[11], // vertical rate in m/s
+          squawk: s[14],
         })) ?? [];
 
       // Filter out flights with altitude 0 or velocity below 100 knots
@@ -78,6 +81,12 @@ function App() {
     return meters * 3.28084; // 1 meter = 3.28084 feet
   };
 
+  const mpsToFpm = (mps) => {
+    if (typeof mps !== "number" || isNaN(mps)) return null;
+    return mps * 196.85; // 1 m/s = 196.85 feet per minute
+  };
+
+  
   return (
     <div style={{ padding: "1.5rem", fontFamily: "system-ui, sans-serif" }}>
       <h1>Beginner Flight Tracker</h1>
@@ -149,7 +158,9 @@ function App() {
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Lat</th>
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Lon</th>
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Altitude (ft)</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Vertical Rate (fpm)</th>
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Speed (knots)</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Squawk</th>
               </tr>
             </thead>
             <tbody>
@@ -166,12 +177,21 @@ function App() {
                   <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatNumber(f.latitude)}</td>
                   <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatNumber(f.longitude)}</td>
                   <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatInteger(Math.round(metersToFeet(f.altitude)))} ft</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>
+                    {(() => {
+                      const fpm = mpsToFpm(f.verticalRate);
+                      if (fpm === null || fpm === undefined) return "—";
+                      const rounded = Math.round(fpm);
+                      return rounded === 0 ? "Level flight" : `${formatInteger(rounded)} fpm`;
+                    })()}
+                  </td>
                   <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatNumber(Math.round(mpsToKnots(f.velocity)), 0)} kts</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{f.squawk || "-"}</td>
                 </tr>
               ))}
               {!loading && flights.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: "1rem" }}>
+                  <td colSpan={8} style={{ textAlign: "center", padding: "1rem" }}>
                     No flights found in this box.
                   </td>
                 </tr>
