@@ -37,7 +37,14 @@ function App() {
           velocity: s[9],
         })) ?? [];
 
-      setFlights(transformed);
+      // Filter out flights with altitude 0 or velocity below 100 knots
+      const filtered = transformed.filter((f) => {
+        const altitude = f.altitude;
+        const velocityKnots = mpsToKnots(f.velocity);
+        return altitude !== 0 && altitude !== null && velocityKnots !== null && velocityKnots >= 100;
+      });
+
+      setFlights(filtered);
     } catch (err) {
       console.error(err);
       setError("Failed to load flights.");
@@ -57,6 +64,19 @@ function App() {
 
   const formatNumber = (n, digits = 2) =>
     typeof n === "number" ? n.toFixed(digits) : "—";
+
+  const formatInteger = (n) =>
+    typeof n === "number" ? n.toLocaleString("en-US") : "—";
+
+  const mpsToKnots = (mps) => {
+    if (typeof mps !== "number" || isNaN(mps)) return null;
+    return mps * 1.94384; // 1 m/s = 1.94384 knots
+  };
+
+  const metersToFeet = (meters) => {
+    if (typeof meters !== "number" || isNaN(meters)) return null;
+    return meters * 3.28084; // 1 meter = 3.28084 feet
+  };
 
   return (
     <div style={{ padding: "1.5rem", fontFamily: "system-ui, sans-serif" }}>
@@ -126,8 +146,8 @@ function App() {
                 <th>Country</th>
                 <th>Lat</th>
                 <th>Lon</th>
-                <th>Altitude (m)</th>
-                <th>Speed (m/s)</th>
+                <th>Altitude (ft)</th>
+                <th>Speed (knots)</th>
               </tr>
             </thead>
             <tbody>
@@ -138,8 +158,8 @@ function App() {
                   <td>{f.originCountry}</td>
                   <td>{formatNumber(f.latitude)}</td>
                   <td>{formatNumber(f.longitude)}</td>
-                  <td>{formatNumber(f.altitude, 0)}</td>
-                  <td>{formatNumber(f.velocity)}</td>
+                  <td>{formatInteger(Math.round(metersToFeet(f.altitude)))} ft</td>
+                  <td>{formatNumber(Math.round(mpsToKnots(f.velocity)), 0)} kts</td>
                 </tr>
               ))}
               {!loading && flights.length === 0 && (

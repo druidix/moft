@@ -11,6 +11,42 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors());
 
+// Token cache
+let accessToken = null;
+
+// Function to obtain a new access token using client credentials
+async function getAccessToken() {
+  const clientId = process.env.OPENSKY_CLIENT_ID;
+  const clientSecret = process.env.OPENSKY_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error("OPENSKY_CLIENT_ID and OPENSKY_CLIENT_SECRET must be set");
+  }
+
+  try {
+    const tokenUrl = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token";
+    
+    const response = await axios.post(
+      tokenUrl,
+      new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: clientId,
+        client_secret: clientSecret,
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    return response.data.access_token;
+  } catch (err) {
+    console.error("Error obtaining access token:", err.message);
+    throw new Error("Failed to obtain access token");
+  }
+}
+
 // Simple “health check”
 app.get("/", (req, res) => {
   res.send("Flight tracker backend is running");
@@ -29,20 +65,38 @@ app.get("/api/flights", async (req, res) => {
 
     const url = "https://opensky-network.org/api/states/all";
 
-    //basic auth is no longer supported. Use API key instead.
-    const apiKey = process.env.OPENSKY_API_KEY;
-    // const username = process.env.OPENSKY_USERNAME;
-    // const password = process.env.OPENSKY_PASSWORD;
+    const makeRequest = async (authToken) => {
+      const axiosConfig = {
+        params: { lamin, lomin, lamax, lomax, extended: 1 },
+        headers: { Authorization: `Bearer ${authToken}` },
+      };
 
-    const axiosConfig = {
-      params: { lamin, lomin, lamax, lomax, extended: 1 },
+      return await axios.get(url, axiosConfig);
     };
 
-    if (apiKey) {
-      axiosConfig.headers = { 'Authorization': `Bearer ${apiKey}` };
+    let response;
+    try {
+      // If no token available, get one first
+      if (!accessToken) {
+        console.log("No access token available, obtaining new token...");
+        accessToken = await getAccessToken();
+      }
+      
+      response = await makeRequest(accessToken);
+    } catch (err) {
+      // Handle 401 Unauthorized - token expired or invalid
+      if (err.response?.status === 401) {
+        console.log("Received 401, obtaining new access token...");
+        
+        // Get a fresh token using client credentials
+        accessToken = await getAccessToken();
+        
+        // Retry the request with the new token
+        response = await makeRequest(accessToken);
+      } else {
+        throw err;
+      }
     }
-
-    const response = await axios.get(url, axiosConfig);
 
     res.json(response.data);
   } catch (err) {
@@ -51,6 +105,20 @@ app.get("/api/flights", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
-});
+// Initialize access token on startup
+async function startServer() {
+  try {
+    console.log("Obtaining initial access token...");
+    accessToken = await getAccessToken();
+    console.log("Access token obtained successfully");
+  } catch (err) {
+    console.error("Failed to obtain initial access token:", err.message);
+    console.error("Server will start, but API requests may fail until token is obtained");
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Server listening on http://localhost:${PORT}`);
+  });
+}
+
+startServer();
