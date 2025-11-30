@@ -5,10 +5,10 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [box, setBox] = useState({
-    lamin: 33.5,
-    lomin: -119.0,
-    lamax: 34.5,
-    lomax: -117.5,
+    lamin: 25.0,
+    lomin: -125.0,
+    lamax: 49.0,
+    lomax: -67.0,
     extended: 1,
   });
 
@@ -86,6 +86,63 @@ function App() {
     return mps * 196.85; // 1 m/s = 196.85 feet per minute
   };
 
+  const getAirlineName = (callsign) => {
+    if (!callsign || callsign === "N/A") return null;
+
+    // Extract airline code (typically first 2-3 characters)
+    const code = callsign.substring(0, 3).toUpperCase();
+
+    const airlineLookup = {
+      // Major US Airlines
+      AAL: "American Airlines",
+      DAL: "Delta Air Lines",
+      UAL: "United Airlines",
+      SWA: "Southwest Airlines",
+      JBU: "JetBlue Airways",
+      ASH: "Alaska Airlines",
+      FFT: "Frontier Airlines",
+      JIA: "JetBlue Airways",
+      RPA: "Republic Airways",
+      SKW: "SkyWest Airlines",
+      ENY: "Envoy Air",
+      PDT: "Piedmont Airlines",
+      PSA: "PSA Airlines",
+      OO: "SkyWest Airlines",
+      // International Airlines
+      BAW: "British Airways",
+      AFR: "Air France",
+      DLH: "Lufthansa",
+      KLM: "KLM Royal Dutch Airlines",
+      IBE: "Iberia",
+      AIC: "Air India",
+      QTR: "Qatar Airways",
+      UAE: "Emirates",
+      VIR: "Virgin Airways",
+      THA: "Thai Airways",
+      SIA: "Singapore Airlines",
+      JAL: "Japan Airlines",
+      ANA: "All Nippon Airways",
+      QFA: "Qantas",
+      ACA: "Air Canada",
+      CCA: "Air China",
+      CES: "China Eastern Airlines",
+      CSN: "China Southern Airlines",
+      LAN: "LATAM Airlines",
+      GLO: "Gol Transportes Aéreos",
+      TAM: "LATAM Brasil",
+      AMX: "Aeroméxico",
+      CMP: "Copa Airlines",
+      // Regional and Other
+      EGF: "American Eagle",
+      EJA: "NetJets",
+      NKS: "Spirit Airlines",
+      VJA: "VistaJet",
+      // Add more as needed
+    };
+
+    return airlineLookup[code] || null;
+  };
+
   
   return (
     <div style={{ padding: "1.5rem", fontFamily: "system-ui, sans-serif" }}>
@@ -153,8 +210,9 @@ function App() {
             <thead>
               <tr style={{ backgroundColor: "#f0f0f0" }}>
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Callsign</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Airline</th>
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>ICAO24</th>
-                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Country</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Origin Country</th>
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Lat</th>
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Lon</th>
                 <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Altitude (ft)</th>
@@ -172,6 +230,7 @@ function App() {
                   }}
                 >
                   <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{f.callsign}</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{getAirlineName(f.callsign) || "-"}</td>
                   <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{f.icao24}</td>
                   <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{f.originCountry}</td>
                   <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatNumber(f.latitude)}</td>
@@ -191,7 +250,7 @@ function App() {
               ))}
               {!loading && flights.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: "center", padding: "1rem" }}>
+                  <td colSpan={9} style={{ textAlign: "center", padding: "1rem" }}>
                     No flights found in this box.
                   </td>
                 </tr>
