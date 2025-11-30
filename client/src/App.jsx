@@ -137,29 +137,36 @@ function App() {
               borderCollapse: "collapse",
               minWidth: "600px",
               fontSize: 14,
+              width: "100%",
+              border: "1px solid #ddd",
             }}
           >
             <thead>
-              <tr>
-                <th>Callsign</th>
-                <th>ICAO24</th>
-                <th>Country</th>
-                <th>Lat</th>
-                <th>Lon</th>
-                <th>Altitude (ft)</th>
-                <th>Speed (knots)</th>
+              <tr style={{ backgroundColor: "#f0f0f0" }}>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Callsign</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>ICAO24</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Country</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Lat</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Lon</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Altitude (ft)</th>
+                <th style={{ padding: "0.75rem", textAlign: "left", borderBottom: "2px solid #ddd" }}>Speed (knots)</th>
               </tr>
             </thead>
             <tbody>
-              {flights.map((f) => (
-                <tr key={f.icao24 + f.callsign}>
-                  <td>{f.callsign}</td>
-                  <td>{f.icao24}</td>
-                  <td>{f.originCountry}</td>
-                  <td>{formatNumber(f.latitude)}</td>
-                  <td>{formatNumber(f.longitude)}</td>
-                  <td>{formatInteger(Math.round(metersToFeet(f.altitude)))} ft</td>
-                  <td>{formatNumber(Math.round(mpsToKnots(f.velocity)), 0)} kts</td>
+              {flights.map((f, index) => (
+                <tr 
+                  key={f.icao24 + f.callsign}
+                  style={{
+                    backgroundColor: index % 2 === 0 ? "#ffffff" : "#e3f2fd",
+                  }}
+                >
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{f.callsign}</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{f.icao24}</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{f.originCountry}</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatNumber(f.latitude)}</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatNumber(f.longitude)}</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatInteger(Math.round(metersToFeet(f.altitude)))} ft</td>
+                  <td style={{ padding: "0.75rem", borderBottom: "1px solid #eee" }}>{formatNumber(Math.round(mpsToKnots(f.velocity)), 0)} kts</td>
                 </tr>
               ))}
               {!loading && flights.length === 0 && (
