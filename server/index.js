@@ -29,19 +29,17 @@ app.get("/api/flights", async (req, res) => {
 
     const url = "https://opensky-network.org/api/states/all";
 
-    //basic auth is no longer supported. TODO: use API key
-    // If you create a free OpenSky account, put your username/password in .env
-    const username = process.env.OPENSKY_USERNAME;
-    const password = process.env.OPENSKY_PASSWORD;
-
-    console.log(username, password);
+    //basic auth is no longer supported. Use API key instead.
+    const apiKey = process.env.OPENSKY_API_KEY;
+    // const username = process.env.OPENSKY_USERNAME;
+    // const password = process.env.OPENSKY_PASSWORD;
 
     const axiosConfig = {
       params: { lamin, lomin, lamax, lomax, extended: 1 },
     };
 
-    if (username && password) {
-      axiosConfig.auth = { username, password };
+    if (apiKey) {
+      axiosConfig.headers = { 'Authorization': `Bearer ${apiKey}` };
     }
 
     const response = await axios.get(url, axiosConfig);
